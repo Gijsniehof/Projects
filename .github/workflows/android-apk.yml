@@ -1,12 +1,12 @@
 # Builds an installable Android APK on GitHub's servers (no Expo account needed).
-# Run it from the "Actions" tab → "Build Android APK" → "Run workflow",
-# or it runs on every push to main. The APK appears under the run's "Artifacts".
+# Runs on every push to the partyspellen branch (or main, if the app moves to
+# its own repo). The APK appears under the run's "Artifacts".
 name: Build Android APK
 
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, partyspellen]
 
 jobs:
   apk:
