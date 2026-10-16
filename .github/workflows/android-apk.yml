@@ -1,0 +1,41 @@
+# Builds an installable Android APK on GitHub's servers (no Expo account needed).
+# Run it from the "Actions" tab → "Build Android APK" → "Run workflow",
+# or it runs on every push to main. The APK appears under the run's "Artifacts".
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - run: npm ci
+
+      # Generates the android/ folder from app.json (Continuous Native Generation).
+      - run: npx expo prebuild --platform android --no-install
+
+      # Release build. Expo's template signs it with the debug key, which is
+      # fine for installing on your own phones (not for the Play Store).
+      - run: ./gradlew assembleRelease --no-daemon
+        working-directory: android
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: partyspellen-apk
+          path: android/app/build/outputs/apk/release/*.apk
