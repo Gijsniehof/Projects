@@ -8,6 +8,9 @@ on:
   push:
     branches: [main, partyspellen]
 
+permissions:
+  contents: write   # needed to publish the APK as a release
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -35,7 +38,23 @@ jobs:
       - run: ./gradlew assembleRelease --no-daemon
         working-directory: android
 
+      - name: Rename APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk partyspellen.apk
+
       - uses: actions/upload-artifact@v4
         with:
           name: partyspellen-apk
-          path: android/app/build/outputs/apk/release/*.apk
+          path: partyspellen.apk
+
+      # Public download that needs no GitHub sign-in. The newest build is always at
+      # https://github.com/<owner>/<repo>/releases/latest/download/partyspellen.apk
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="partyspellen-v1.0.${{ github.run_number }}"
+          gh release create "$TAG" partyspellen.apk \
+            --target "${{ github.sha }}" \
+            --title "Partyspellen build ${{ github.run_number }}" \
+            --notes "Android APK: Imposter en 30 Seconds. Open deze link op je telefoon en installeer." \
+            --latest
