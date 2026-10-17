@@ -2,6 +2,7 @@ import { Redirect, router } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 
 import { currentDescriber, finalRoundNotice } from '@/games/thirty/logic';
+import { EveningStats } from '@/games/thirty/components/EveningStats';
 import { useThirty } from '@/games/thirty/store';
 import type { Game } from '@/games/thirty/types';
 import { Button, Card, Screen } from '@/ui/components';
@@ -9,7 +10,7 @@ import { colors, space, teamColor, type } from '@/ui/theme';
 import { useLeaveGuard } from '@/ui/useLeaveGuard';
 
 export default function Scores() {
-  const { game, startGame } = useThirty();
+  const { game, startGame, stats, resetStats } = useThirty();
   useLeaveGuard('/thirty', 'Het spel wordt bewaard. Je kunt later verder spelen.');
   if (!game) return <Redirect href="/thirty" />;
 
@@ -38,6 +39,7 @@ export default function Scores() {
           </Text>
         </View>
         <Scoreboard game={game} />
+        <EveningStats stats={stats} onReset={resetStats} />
       </Screen>
     );
   }
@@ -85,6 +87,8 @@ export default function Scores() {
       <Scoreboard game={game} />
 
       {notice ? <Text style={[type.body, { color: colors.imposter }]}>{notice}</Text> : null}
+
+      <EveningStats stats={stats} limit={3} />
 
       <View style={{ gap: space.xs }}>
         <Text style={type.label}>Aan de beurt</Text>

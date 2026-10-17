@@ -8,7 +8,7 @@ interface GameTile {
   title: string;
   description: string;
   players: string;
-  href?: '/imposter' | '/thirty';
+  href?: '/imposter' | '/thirty' | '/headsup';
 }
 
 /** Add new games here as they are built. */
@@ -24,6 +24,12 @@ const GAMES: GameTile[] = [
     description: 'Omschrijf zoveel mogelijk begrippen binnen 30 seconden.',
     players: '2+ teams',
     href: '/thirty',
+  },
+  {
+    title: 'Wie ben ik?',
+    description: 'Telefoon op je voorhoofd, de groep omschrijft. Kantel om te scoren.',
+    players: '2+ spelers',
+    href: '/headsup',
   },
 ];
 

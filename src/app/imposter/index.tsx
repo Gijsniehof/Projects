@@ -116,6 +116,7 @@ export default function ImposterSetup() {
             value={settings.showCategory}
             onValueChange={(showCategory) => updateSettings({ showCategory })}
             trackColor={{ true: colors.accent, false: colors.border }}
+          thumbColor="#FFFFFF"
           />
         </View>
       ) : null}

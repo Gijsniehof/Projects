@@ -143,3 +143,48 @@ export function finalRoundNotice(game: Game): string | null {
   if (!reached.length) return null;
   return `${reached.map((t) => t.name).join(' en ')} ${reached.length > 1 ? 'hebben' : 'heeft'} ${game.target} punten. De ronde wordt afgemaakt.`;
 }
+
+// ---------------------------------------------------------------------------
+// Evening statistics: points per describer across all games of one evening.
+
+export interface DescriberStat {
+  name: string;
+  points: number;
+  turns: number;
+}
+
+export interface EveningStats {
+  /** Last time a turn was recorded (ms). */
+  lastAt: number;
+  /** Keyed by lower-cased name so "gijs" and "Gijs" count as one person. */
+  describers: Record<string, DescriberStat>;
+}
+
+/** A pause longer than this starts a new evening. */
+export const EVENING_GAP_MS = 8 * 60 * 60 * 1000;
+
+export const emptyStats = (): EveningStats => ({ lastAt: 0, describers: {} });
+
+/** Returns the stats to use now: the stored ones, or a fresh evening after a long pause. */
+export function currentEvening(stats: EveningStats, now: number): EveningStats {
+  return stats.lastAt && now - stats.lastAt > EVENING_GAP_MS ? emptyStats() : stats;
+}
+
+export function recordDescriberTurn(stats: EveningStats, describer: string | null, points: number, now: number): EveningStats {
+  if (!describer) return stats;
+  const base = currentEvening(stats, now);
+  const key = describer.trim().toLowerCase();
+  const prev = base.describers[key] ?? { name: describer.trim(), points: 0, turns: 0 };
+  return {
+    lastAt: now,
+    describers: { ...base.describers, [key]: { name: describer.trim(), points: prev.points + points, turns: prev.turns + 1 } },
+  };
+}
+
+/** Best explainer first: highest average per turn, then most points, then most turns. */
+export function rankDescribers(stats: EveningStats): (DescriberStat & { average: number })[] {
+  return Object.values(stats.describers)
+    .filter((d) => d.turns > 0)
+    .map((d) => ({ ...d, average: d.points / d.turns }))
+    .sort((a, b) => b.average - a.average || b.points - a.points || b.turns - a.turns || a.name.localeCompare(b.name));
+}

@@ -2,7 +2,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { TERM_POOLS } from './data/terms.nl';
-import { applyTurn, drawCard, newGame, validateSettings } from './logic';
+import {
+  applyTurn,
+  currentDescriber,
+  currentEvening,
+  drawCard,
+  emptyStats,
+  newGame,
+  recordDescriberTurn,
+  validateSettings,
+  type EveningStats,
+} from './logic';
 import type { Game, ThirtySettings } from './types';
 
 const STORAGE_KEY = 'thirty/v1';
@@ -21,6 +31,7 @@ interface Persisted {
   settings: ThirtySettings;
   game: Game | null;
   used: string[];
+  stats?: EveningStats;
 }
 
 interface ThirtyStore {
@@ -34,6 +45,9 @@ interface ThirtyStore {
   startTurn: () => void;
   submitTurn: (guessed: boolean[]) => void;
   endGame: () => void;
+  /** Describer statistics for this evening (across games). */
+  stats: EveningStats;
+  resetStats: () => void;
 }
 
 const Ctx = createContext<ThirtyStore | null>(null);
@@ -43,6 +57,7 @@ export function ThirtyProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<ThirtySettings>(DEFAULT_THIRTY_SETTINGS);
   const [game, setGame] = useState<Game | null>(null);
   const [used, setUsed] = useState<string[]>([]);
+  const [stats, setStats] = useState<EveningStats>(emptyStats);
 
   useEffect(() => {
     (async () => {
@@ -53,6 +68,7 @@ export function ThirtyProvider({ children }: { children: ReactNode }) {
           if (saved.settings) setSettings({ ...DEFAULT_THIRTY_SETTINGS, ...saved.settings });
           if (saved.game) setGame(saved.game);
           if (saved.used) setUsed(saved.used);
+          if (saved.stats) setStats(currentEvening(saved.stats, Date.now()));
         }
       } catch {
         // Unreadable storage: start fresh.
@@ -65,9 +81,9 @@ export function ThirtyProvider({ children }: { children: ReactNode }) {
   // Persist everything, including a game in progress, so a closed app can resume.
   useEffect(() => {
     if (!ready) return;
-    const data: Persisted = { settings, game, used };
+    const data: Persisted = { settings, game, used, stats };
     AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data)).catch(() => {});
-  }, [ready, settings, game, used]);
+  }, [ready, settings, game, used, stats]);
 
   const updateSettings = useCallback((patch: Partial<ThirtySettings>) => {
     setSettings((s) => ({ ...s, ...patch }));
@@ -86,15 +102,23 @@ export function ThirtyProvider({ children }: { children: ReactNode }) {
     setGame({ ...game, card: drawn.card });
   }, [game, used]);
 
-  const submitTurn = useCallback((guessed: boolean[]) => {
-    setGame((g) => (g ? applyTurn(g, guessed) : g));
-  }, []);
+  const submitTurn = useCallback(
+    (guessed: boolean[]) => {
+      if (!game || !game.card || game.winner !== null) return;
+      const points = guessed.filter(Boolean).length;
+      setStats((st) => recordDescriberTurn(st, currentDescriber(game), points, Date.now()));
+      setGame(applyTurn(game, guessed));
+    },
+    [game],
+  );
+
+  const resetStats = useCallback(() => setStats(emptyStats()), []);
 
   const endGame = useCallback(() => setGame(null), []);
 
   const value = useMemo<ThirtyStore>(
-    () => ({ ready, settings, game, updateSettings, startGame, startTurn, submitTurn, endGame }),
-    [ready, settings, game, updateSettings, startGame, startTurn, submitTurn, endGame],
+    () => ({ ready, settings, game, updateSettings, startGame, startTurn, submitTurn, endGame, stats, resetStats }),
+    [ready, settings, game, updateSettings, startGame, startTurn, submitTurn, endGame, stats, resetStats],
   );
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;

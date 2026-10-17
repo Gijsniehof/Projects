@@ -3,6 +3,7 @@ import { Alert, Platform, Pressable, StyleSheet, Text, TextInput, View } from 'r
 
 import { MAX_TEAMS, MIN_TEAMS, validateSettings } from '@/games/thirty/logic';
 import { TERM_POOLS } from '@/games/thirty/data/terms.nl';
+import { EveningStats } from '@/games/thirty/components/EveningStats';
 import { useThirty } from '@/games/thirty/store';
 import type { PoolId, TeamSetup } from '@/games/thirty/types';
 import { Button, Card, Chip, Screen, Section, Segmented } from '@/ui/components';
@@ -12,7 +13,7 @@ const TARGETS = [15, 20, 30, 40].map((v) => ({ value: v, label: `${v}` }));
 const TIMES = [30, 45, 60].map((v) => ({ value: v, label: `${v} sec` }));
 
 export default function ThirtySetup() {
-  const { ready, settings, updateSettings, game, startGame } = useThirty();
+  const { ready, settings, updateSettings, game, startGame, stats, resetStats } = useThirty();
   const error = validateSettings(settings);
   const teams = settings.teams;
 
@@ -63,6 +64,8 @@ export default function ThirtySetup() {
           <Button label="Verder spelen" onPress={() => router.push('/thirty/scores')} />
         </Card>
       ) : null}
+
+      <EveningStats stats={stats} onReset={resetStats} limit={3} />
 
       <Section label={`Teams · ${teams.length}`} hint="Spelersnamen zijn optioneel. Als je ze invult, wisselt de verteller elke beurt.">
         <View style={{ gap: space.md }}>
