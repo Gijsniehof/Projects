@@ -20,6 +20,7 @@ src/app/                    routes (Expo Router)
   imposter/                 setup → reveal → play → result
   thirty/                   setup → turn → check → scores
   headsup/                  setup → play (forehead, tilt) → result
+  wavelength/               setup → turn (handoff → secret → guess → bonus → reveal) → winner
 src/games/imposter/
   data/words.nl.ts          curated Dutch words, hints, undercover words
   logic.ts                  pure game logic (role assignment, word picking)
@@ -32,6 +33,10 @@ src/games/headsup/
   data.ts                   word groups (reuses 30 Seconds terms + Imposter words)
   logic.ts                  deck building, tilt detection, screen rotation
   store.tsx                 settings + recently used words
+src/games/wavelength/
+  data/scales.nl.ts         94 Dutch scales ("left|right", one per line)
+  logic.ts                  scoring bands, bonus guess, turn order, dial geometry
+  Dial.tsx                  half-circle dial (react-native-svg), draggable
 src/ui/                     shared theme, components and back-button guard
 ```
 
@@ -49,6 +54,10 @@ Teams take turns; a describer (rotating through the team's players, if named) ge
 ## Wie ben ik?
 
 The app stays portrait-locked; on the play screen the content is rotated 90° to read upright on a sideways phone (side chosen from the accelerometer). Tilt forward (screen to the floor, z → −1 g) = guessed, tilt back (z → +1 g) = pass; the phone must return upright before the next tilt counts. Tilt can be turned off for tap mode (right half = guessed, left half = pass).
+
+## Op dezelfde golflengte
+
+Dial 0–100. Hidden target bands: |guess − target| ≤ 2.5 → 4, ≤ 7.5 → 3, ≤ 12.5 → 2. The next team guesses whether the target is left or right of the dial for 1 point (not when the guess is a bullseye). Same end rule as 30 Seconds: finish the round, tie at the top plays on.
 
 ## Build
 

@@ -1,3 +1,5 @@
+import type { TeamSetup } from '@/ui/teams';
+
 export type PoolId = 'algemeen' | 'personen' | 'nederland';
 
 export interface TermPool {
@@ -6,11 +8,7 @@ export interface TermPool {
   terms: string[];
 }
 
-export interface TeamSetup {
-  name: string;
-  /** Optional. When filled, the describer rotates through these players. */
-  players: string[];
-}
+export type { TeamSetup };
 
 export interface ThirtySettings {
   teams: TeamSetup[];

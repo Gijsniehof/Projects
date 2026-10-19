@@ -8,7 +8,7 @@ interface GameTile {
   title: string;
   description: string;
   players: string;
-  href?: '/imposter' | '/thirty' | '/headsup';
+  href?: '/imposter' | '/thirty' | '/headsup' | '/wavelength';
 }
 
 /** Add new games here as they are built. */
@@ -30,6 +30,12 @@ const GAMES: GameTile[] = [
     description: 'Telefoon op je voorhoofd, de groep omschrijft. Kantel om te scoren.',
     players: '2+ spelers',
     href: '/headsup',
+  },
+  {
+    title: 'Op dezelfde golflengte',
+    description: 'Eén hint, één wijzer. Zit je team op dezelfde golflengte?',
+    players: '2+ teams',
+    href: '/wavelength',
   },
 ];
 

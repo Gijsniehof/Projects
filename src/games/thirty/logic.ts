@@ -1,3 +1,4 @@
+import { cleanTeams as cleanTeamList, validateTeams } from '@/ui/teams';
 import type { Game, PoolId, TermPool, ThirtySettings } from './types';
 
 export type Rng = () => number;
@@ -55,23 +56,13 @@ export function drawCard(
 }
 
 export function cleanTeams(settings: ThirtySettings) {
-  return settings.teams.map((t) => ({
-    name: t.name.trim(),
-    players: t.players.map((p) => p.trim()).filter(Boolean),
-  }));
+  return cleanTeamList(settings.teams);
 }
 
 /** Returns an error message (Dutch, shown in the UI) or null when the setup is valid. */
 export function validateSettings(settings: ThirtySettings): string | null {
-  const teams = cleanTeams(settings);
-  if (teams.length < MIN_TEAMS) return `Minimaal ${MIN_TEAMS} teams nodig`;
-  if (teams.some((t) => !t.name)) return 'Elk team heeft een naam nodig';
-  const names = teams.map((t) => t.name.toLowerCase());
-  if (new Set(names).size !== names.length) return 'Teamnamen moeten verschillend zijn';
-  for (const t of teams) {
-    const lower = t.players.map((p) => p.toLowerCase());
-    if (new Set(lower).size !== lower.length) return `Dubbele spelersnaam in ${t.name}`;
-  }
+  const teamError = validateTeams(settings.teams);
+  if (teamError) return teamError;
   if (!settings.pools.length) return 'Kies minimaal één soort begrippen';
   return null;
 }
